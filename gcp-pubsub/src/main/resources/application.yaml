@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: gcp-pubsub
+  cloud:
+    gcp:
+      pubsub:
+        emulator-host: localhost:8085
+pubsub:
+  source:
+    topic: my-topic
+    subscriber: my-subscriber
+  max-retry-number: 3
+  retry-delay-in-milliseconds: 500
+  enable-retry-subscriber: false
+  enable-retry-publisher: true
+
+
+

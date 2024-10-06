@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Postgres Database
+  postgres-db:
+    image: postgres:13-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - microservices-network
+
+  # Pub/Sub Emulator
+  pubsub-emulator:
+    image: google/cloud-sdk:latest
+    container_name: pubsub-emulator
+    entrypoint: ["gcloud", "beta", "emulators", "pubsub", "start", "--host-port=0.0.0.0:8085"]
+    ports:
+      - "8085:8085"
+    networks:
+      - microservices-network
+
+  # Microservice 1
+  microservice1:
+    image: gcp-pubsub:latest
+    container_name: microservice1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/mydb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      GOOGLE_CLOUD_PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+    depends_on:
+      - postgres-db
+      - pubsub-emulator
+    ports:
+      - "8081:8081"
+    networks:
+      - microservices-network
+ 
+
+volumes:
+  postgres-data:
+
+networks:
+  microservices-network:
+    driver: bridge
